@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - ThriftTech</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style2.css') }}">
+</head>
+<body>
+    <div class="admin-header">
+        <h1>Admin Dashboard</h1>
+        <nav>
+            <a href="{{ url_for('admin.dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('admin.admin_products') }}">Products</a>
+            <a href="{{ url_for('admin.manage_users') }}">Users</a>
+            <a href="{{ url_for('admin.reports') }}">Reports</a>
+            <a href="{{ url_for('home') }}">Back to Site</a>
+        </nav>
+    </div>
+
+    <div class="admin-content">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Different Products Sold</h3>
+                <p class="stat-number">{{ reports.products_sold }}</p>
+            </div>
+            <div class="stat-card">
+                <h3>Users Registered Today</h3>
+                <p class="stat-number">{{ reports.users_today }}</p>
+            </div>
+            <div class="stat-card">
+                <h3>Orders Today</h3>
+                <p class="stat-number">{{ reports.orders_today }}</p>
+            </div>
+            <div class="stat-card">
+                <h3>Total Revenue (ZAR)</h3>
+                <p class="stat-number">R{{ "%.2f"|format(reports.total_revenue) }}</p>
+            </div>
+        </div>
+
+        <div class="reports-section">
+            <h2>Inventory Report</h2>
+            <h3>Products on Hand</h3>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr><th>Product</th><th>Stock</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for product in reports.products_on_hand %}
+                        <tr>
+                            <td>{{ product.Title }}</td>
+                            <td>{{ product.Stock }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Low Stock Alert</h3>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr><th>Product</th><th>Stock</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for product in reports.low_stock %}
+                        <tr style="color: red;">
+                            <td>{{ product.Title }}</td>
+                            <td>{{ product.Stock }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Top Selling Categories</h3>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr><th>Category</th><th>Total Sold</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for category in reports.top_categories %}
+                        <tr>
+                            <td>{{ category.Category }}</td>
+                            <td>{{ category.TotalSold }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="quick-actions">
+            <h2>Quick Actions</h2>
+            <a href="{{ url_for('admin.add_product') }}" class="btn btn-primary">Add New Product</a>
+            <a href="{{ url_for('admin.admin_products') }}" class="btn btn-outline">Manage Products</a>
+        </div>
+    </div>
+</body>
+</html>

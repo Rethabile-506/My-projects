@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - ThriftTech</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style2.css') }}">
+</head>
+<body>
+    <header>
+        <div class="container header-container">
+            <a class="logo" href="/">Thrift<span>Tech</span></a>
+
+            <nav class="navbar">
+                <ul>
+                    <li class="dropdown">
+                        <a href="#">Categories</a>
+                        <ul class="dropdown-content">
+                            <li><a href="/product">All Products</a></li>
+                            <li><a href="/product?category=Smartphones">Smartphones</a></li>
+                            <li><a href="/product?category=Laptops">Laptops</a></li>
+                            <li><a href="/product?category=Cameras">Cameras</a></li>
+                            <li><a href="/product?category=Gaming Console">Gaming Console</a></li>
+                            <li><a href="/product?category=Audio Equipment">Audio Equipment</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </nav>
+
+            <nav>
+                <ul>
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/sell">Sell</a></li>
+                    <li><a href="/rent">Rent</a></li>
+                    <li><a href="/auction">Auction</a></li>
+                    <li><a href="/repair">Repair</a></li>
+                    <li><a href="/cart"><i class="fas fa-shopping-cart"></i> Cart</a></li>
+                    {% if session.logged_in %}
+                        <li><a href="{{ url_for('user.invoices') }}"><i class="fas fa-file-invoice"></i> Invoices</a></li>
+                        <li><a href="{{ url_for('user.orders') }}"><i class="fas fa-clipboard-list"></i> Orders</a></li>
+                        <li><a href="{{ url_for('user.account') }}"><i class="fas fa-user-circle"></i> Account</a></li>
+                        {% if session.role == 'admin' %}
+                        <li><a href="{{ url_for('admin.dashboard') }}"><i class="fas fa-cog"></i> Admin</a></li>
+                        {% endif %}
+                    {% else %}
+                        <li><a href="{{ url_for('user.login', next=request.url) }}">Login</a></li>
+                        <li><a href="{{ url_for('user.register') }}">Register</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+
+            <div class="welcome-strip">
+                {% if session.logged_in %}
+                    <span class="user-welcome">Welcome, {{ session.email }}!</span>
+                {% endif %}
+            </div>
+
+            <div class="nav-auth">
+                {% if session.logged_in %}
+                    <a class="btn btn-outline" href="{{ url_for('user.logout') }}">Logout</a>
+                {% else %}
+                    <a class="btn btn-outline" href="{{ url_for('user.login', next=request.url) }}">Login</a>
+                    <a class="btn btn-primary" href="{{ url_for('user.register') }}">Register</a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }}">
+                            {{ message }}
+                            <button type="button" class="btn-close" onclick="this.parentElement.style.display='none'">&times;</button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <h1><i class="fas fa-credit-card"></i> Checkout</h1>
+
+        <form method="POST" class="checkout-form">
+            <div class="checkout-content">
+                <div class="checkout-main">
+                    <div class="section">
+                        <h2>Shipping Information</h2>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="first_name">First Name *</label>
+                                <input type="text" id="first_name" name="first_name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="last_name">Last Name *</label>
+                                <input type="text" id="last_name" name="last_name" required>
+                            </div>
+                            <div class="form-group full-width">
+                                <label for="address">Address *</label>
+                                <input type="text" id="address" name="address" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="city">City *</label>
+                                <input type="text" id="city" name="city" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="province">Province *</label>
+                                <select id="province" name="province" required>
+                                    <option value="">Select Province</option>
+                                    <option value="Eastern Cape">Eastern Cape</option>
+                                    <option value="Free State">Free State</option>
+                                    <option value="Gauteng">Gauteng</option>
+                                    <option value="KwaZulu-Natal">KwaZulu-Natal</option>
+                                    <option value="Limpopo">Limpopo</option>
+                                    <option value="Mpumalanga">Mpumalanga</option>
+                                    <option value="Northern Cape">Northern Cape</option>
+                                    <option value="North West">North West</option>
+                                    <option value="Western Cape">Western Cape</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="zip_code">Postal Code *</label>
+                                <input type="text" id="zip_code" name="zip_code" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h2>Payment Information</h2>
+                        <div class="payment-methods">
+                            <label class="payment-option">
+                                <input type="radio" name="payment_method" value="credit_card" checked>
+                                <span class="radio-custom"></span>
+                                Credit Card
+                            </label>
+                            <label class="payment-option">
+                                <input type="radio" name="payment_method" value="paypal">
+                                <span class="radio-custom"></span>
+                                PayPal
+                            </label>
+                            <label class="payment-option">
+                                <input type="radio" name="payment_method" value="cash_on_delivery">
+                                <span class="radio-custom"></span>
+                                Cash on Delivery
+                            </label>
+                        </div>
+
+                        <div id="credit_card_fields" class="payment-fields">
+                            <div class="form-grid">
+                                <div class="form-group full-width">
+                                    <label for="card_number">Card Number</label>
+                                    <input type="text" id="card_number" name="card_number" placeholder="1234 5678 9012 3456">
+                                </div>
+                                <div class="form-group">
+                                    <label for="expiry">Expiry Date</label>
+                                    <input type="text" id="expiry" name="expiry" placeholder="MM/YY">
+                                </div>
+                                <div class="form-group">
+                                    <label for="cvv">CVV</label>
+                                    <input type="text" id="cvv" name="cvv" placeholder="123">
+                                </div>
+                                <div class="form-group full-width">
+                                    <label for="card_name">Name on Card</label>
+                                    <input type="text" id="card_name" name="card_name">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="paypal_fields" class="payment-fields" style="display: none;">
+                            <p>You will be redirected to PayPal to complete your payment.</p>
+                        </div>
+
+                        <div id="cod_fields" class="payment-fields" style="display: none;">
+                            <p>You will pay cash when your order is delivered. A small delivery fee may apply.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="order-summary">
+                    <div class="summary-card">
+                        <h2>Order Summary</h2>
+                        
+                        <div class="order-items">
+                            {% for item in cart_items %}
+                            <div class="order-item">
+                                <img src="{{ item.Photo }}" alt="{{ item.Title }}">
+                                <div class="item-details">
+                                    <h4>{{ item.Title }}</h4>
+                                    <p>Qty: {{ item.Quantity }}</p>
+                                </div>
+                                <div class="item-price">R{{ "%.2f"|format(item.Total) }}</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="summary-totals">
+                            <div class="summary-line">
+                                <span>Subtotal:</span>
+                                <span>R{{ "%.2f"|format(totals.subtotal) }}</span>
+                            </div>
+                            <div class="summary-line">
+                                <span>Shipping:</span>
+                                <span>R{{ "%.2f"|format(totals.shipping) }}</span>
+                            </div>
+                            <div class="summary-line">
+                                <span>VAT (15%):</span>
+                                <span>R{{ "%.2f"|format(totals.tax) }}</span>
+                            </div>
+                            <div class="summary-line total">
+                                <span><strong>Total:</strong></span>
+                                <span><strong>R{{ "%.2f"|format(totals.total) }}</strong></span>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-large">
+                            <i class="fas fa-lock"></i> Place Order
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <style>
+        .checkout-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 40px;
+            margin: 20px 0;
+        }
+
+        .section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+
+        .section h2 {
+            margin: 0 0 20px 0;
+            color: #333;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-group.full-width {
+            grid-column: span 2;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1em;
+        }
+
+        .payment-methods {
+            margin-bottom: 20px;
+        }
+
+        .payment-option {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            cursor: pointer;
+        }
+
+        .payment-option input[type="radio"] {
+            width: auto;
+            margin-right: 10px;
+        }
+
+        .order-items {
+            margin-bottom: 20px;
+        }
+
+        .order-item {
+            display: grid;
+            grid-template-columns: 60px 1fr auto;
+            gap: 10px;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .order-item:last-child {
+            border-bottom: none;
+        }
+
+        .order-item img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+        .item-details h4 {
+            margin: 0 0 5px 0;
+            font-size: 0.9em;
+        }
+
+        .item-details p {
+            margin: 0;
+            color: #666;
+            font-size: 0.8em;
+        }
+
+        .item-price {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .summary-totals {
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+
+        .summary-line {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+        }
+
+        .summary-line.total {
+            border-top: 2px solid #ddd;
+            margin-top: 15px;
+            padding-top: 15px;
+            font-size: 1.2em;
+        }
+
+        .btn-large {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1em;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .checkout-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-group.full-width {
+                grid-column: span 1;
+            }
+        }
+    </style>
+
+    <script>
+        // Show/hide payment fields based on selection
+        document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const creditCardFields = document.getElementById('credit_card_fields');
+                if (this.value === 'credit_card') {
+                    creditCardFields.style.display = 'block';
+                } else {
+                    creditCardFields.style.display = 'none';
+                }
+            });
+        });
+
+        // Format card number input
+        document.getElementById('card_number').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\s/g, '').replace(/[^0-9]/gi, '');
+            let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+            e.target.value = formattedValue;
+        });
+
+        // Format expiry date input
+        document.getElementById('expiry').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length >= 2) {
+                value = value.substring(0, 2) + '/' + value.substring(2, 4);
+            }
+            e.target.value = value;
+        });
+    </script>
+</body>
+</html>

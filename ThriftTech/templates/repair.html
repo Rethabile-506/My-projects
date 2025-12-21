@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+   <link rel="stylesheet" href="{{ url_for('static', filename='style2.css') }}">
+</head>
+
+<body>
+
+    <!-- Header Section -->
+    <header>
+        <div class="container header-container">
+            <a class="logo" onclick="showPage('user.home')">Thrift<span>Tech</span></a>
+
+
+            <nav class="navbar">
+                <ul>
+                    <li class="dropdown">
+                        <a href="#">Categories</a>
+                        <ul class="dropdown-content">
+                            <li><a href="/products">All Products</a></li>
+                            <li><a href="product.html?category=Smartphones">Smartphones</a></li>
+                            <li><a href="product.html?category=Laptops">Laptops</a></li>
+                            <li><a href="product.html?category=Cameras">Cameras</a></li>
+                            <li><a href="product.html?category=Gaming Console">Gaming Console</a></li>
+                            <li><a href="product.html?category=Audio Equipment">Audio Equipment</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </nav>
+
+
+            <nav>
+                <ul>
+                    <li><a onclick href="/">Home</a></li>
+
+                    <li><a onclick href="/sell">Sell</a></li>
+                    <li><a onclick href="/rent">Rent</a></li>
+                    <li><a onclick href="/auction">Auction</a></li>
+                    <li><a class="active" onclick="showPage('repair')">Repair</a></li>
+
+                    <li><a href="/cart"><i class="fas fa-shopping-cart"></i> Cart</a></li>
+                    {% if session.logged_in %}
+                        <li><a href="{{ url_for('user.invoices') }}"><i class="fas fa-file-invoice"></i> Invoices</a></li>
+                        <li><a href="{{ url_for('user.orders') }}"><i class="fas fa-clipboard-list"></i> Orders</a></li>
+                        <li><a href="{{ url_for('user.account') }}"><i class="fas fa-user-circle"></i> Account</a></li>
+                        {% if session.role == 'admin' %}
+                        <li><a href="{{ url_for('admin.dashboard') }}"><i class="fas fa-cog"></i> Admin</a></li>
+                        {% endif %}
+                    {% else %}
+                        <li><a href="{{ url_for('user.login', next=request.url) }}">Login</a></li>
+                        <li><a href="{{ url_for('user.register') }}">Register</a></li>
+                    {% endif %}
+                    <!-- Removed duplicate My Account link -->
+                </ul>
+            </nav>
+
+            <div class="welcome-strip">
+                {% if session.logged_in %}
+                    <span class="user-welcome">Welcome, {{ session.email }}!</span>
+                {% endif %}
+            </div>
+
+            <div class="nav-auth">
+                {% if session.logged_in %}
+                    <a class="btn btn-outline" href="{{ url_for('user.logout') }}">Logout</a>
+                {% else %}
+                    <a class="btn btn-outline" href="{{ url_for('user.login', next=request.url) }}">Login</a>
+                    <a class="btn btn-primary" href="{{ url_for('user.register') }}">Register</a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+
+    <div class="container">
+        <!-- Repair Page -->
+        <div id="repair" class="page-content active">
+            <div class="page-header">
+                <h2>Repair Services</h2>
+                <p>Get your devices fixed by trusted professionals</p>
+            </div>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'error' else category }}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <div class="repair-form">
+                <h3>Request a Repair</h3>
+                
+                
+                
+                <form method="POST" action="/repair">
+                    <div class="form-group">
+                        <label for="device-type">Device Type *</label>
+                        <select id="device-type" name="device-type" required>
+                            <option value="">Select Device</option>
+                            <option value="iPhone">iPhone</option>
+                            <option value="Samsung Galaxy">Samsung Galaxy</option>
+                            <option value="iPad">iPad</option>
+                            <option value="MacBook">MacBook</option>
+                            <option value="Dell Laptop">Dell Laptop</option>
+                            <option value="HP Laptop">HP Laptop</option>
+                            <option value="PlayStation">PlayStation</option>
+                            <option value="Xbox">Xbox</option>
+                            <option value="Camera">Camera</option>
+                            <option value="Headphones">Headphones</option>
+                            <option value="Other">Other Device</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="issue-description">Issue Description *</label>
+                        <textarea id="issue-description" name="issue-description" 
+                                placeholder="Please describe the problem you're experiencing in detail. Include any error messages, when the issue started, and what you were doing when it occurred." 
+                                rows="5" required></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Submit Repair Request</button>
+                    
+                    {% if not session.logged_in %}
+                    <p class="form-note">
+                        <i class="fas fa-info-circle"></i>
+                        You need to <a href="{{ url_for('user.login', next=request.url) }}">log in</a> to submit a repair request.
+                    </p>
+                    {% endif %}
+                </form>
+            </div>
+            
+            <!-- User's Repair History -->
+            {% if session.logged_in and user_repairs %}
+            <div class="repair-history">
+                <h3>Your Repair Requests</h3>
+                <div class="repair-requests">
+                    {% for repair in user_repairs %}
+                    <div class="repair-request-card">
+                        <div class="repair-header">
+                            <h4>{{ repair.DeviceType }}</h4>
+                            <span class="status status-{{ repair.Status }}">{{ repair.Status|title }}</span>
+                        </div>
+                        <p class="repair-description">{{ repair.IssueDescription }}</p>
+                        <div class="repair-details">
+                            <span class="repair-id">Request #{{ repair.ServiceId }}</span>
+                            <span class="repair-date">{{ repair.SubmittedAt.strftime('%d %b %Y') if repair.SubmittedAt else 'N/A' }}</span>
+                            {% if repair.EstimatedCost %}
+                            <span class="repair-cost">Estimated: R{{ repair.EstimatedCost }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="services">
+                <div class="section-title">
+                    <h2>Our Repair Services</h2>
+                </div>
+                <div class="services-grid">
+                    <div class="service-card">
+                        <div class="service-icon"><i class="fas fa-mobile-alt"></i></div>
+                        <h3>Screen Replacement</h3>
+                        <p>Fast screen repairs for phones, tablets, and laptops.</p>
+                    </div>
+                    <div class="service-card">
+                        <div class="service-icon"><i class="fas fa-battery-full"></i></div>
+                        <h3>Battery Replacement</h3>
+                        <p>Get your device's battery replaced to restore battery life.</p>
+                    </div>
+                    <div class="service-card">
+                        <div class="service-icon"><i class="fas fa-tint"></i></div>
+                        <h3>Water Damage Repair</h3>
+                        <p>Expert water damage assessment and repair services.</p>
+                    </div>
+                    <div class="service-card">
+                        <div class="service-icon"><i class="fas fa-cogs"></i></div>
+                        <h3>Component Repair</h3>
+                        <p>Repairs for cameras, buttons, speakers, and other components.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="testimonials">
+                <div class="section-title">
+                    <h2>Repair Testimonials</h2>
+                </div>
+                <div class="testimonials-grid">
+                    <div class="testimonial-card">
+                        <div class="testimonial-text">
+                            "My phone's screen was shattered, and ThriftTech had it fixed in just a few hours for half
+                            the price of the manufacturer's repair service."
+                        </div>
+                        <div class="testimonial-author">- David R.</div>
+                    </div>
+                    <div class="testimonial-card">
+                        <div class="testimonial-text">
+                            "The water damage repair saved my laptop after I spilled coffee on it. Quick service and
+                            affordable pricing."
+                        </div>
+                        <div class="testimonial-author">- Michelle K.</div>
+                    </div>
+                    <div class="testimonial-card">
+                        <div class="testimonial-text">
+                            "I was amazed at how quickly they replaced my tablet battery. It's like having a brand new
+                            device again."
+                        </div>
+                        <div class="testimonial-author">- James L.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+    <!-- Footer Section -->
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-column">
+                    <h3>ThriftTech</h3>
+                    <p>Your one-stop marketplace for buying, selling, renting, and repairing tech gadgets.</p>
+                </div>
+                <div class="footer-column">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a onclick="showPage('home')">Home</a></li>
+                        <li><a onclick="showPage('buy')">Buy</a></li>
+                        <li><a onclick="showPage('sell')">Sell</a></li>
+                        <li><a onclick="showPage('rent')">Rent</a></li>
+                        <li><a onclick="showPage('auction')">Auction</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Help & Support</h3>
+                    <ul>
+                        <li><a href="#">FAQ</a></li>
+                        <li><a href="#">Shipping & Returns</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Contact Us</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Connect With Us</h3>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2025 ThriftTech. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+
+</html>

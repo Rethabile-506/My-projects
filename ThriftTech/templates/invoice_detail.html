@@ -1,0 +1,17 @@
+{% extends 'home.html' %}
+{% block content %}
+<div class="container">
+    <h1>Invoice #{{ invoice.InvoiceId }}</h1>
+    <p><strong>Date:</strong> {{ invoice.CreatedAt.strftime('%Y-%m-%d %H:%M') }}</p>
+    <p><strong>Total:</strong> R{{ '%.2f'|format(invoice.Total) }}</p>
+    <p><strong>Order #:</strong> {{ invoice.OrderId }}</p>
+    <hr>
+    <h3>Order Details</h3>
+    <ul>
+        {% for item in order_items %}
+        <li>{{ item.Title }} (x{{ item.Quantity }}) - R{{ '%.2f'|format(item.Price) }}</li>
+        {% endfor %}
+    </ul>
+    <a href="{{ url_for('user.invoices') }}" class="btn btn-outline">Back to Invoices</a>
+</div>
+{% endblock %}

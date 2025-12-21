@@ -1,0 +1,102 @@
+/* Navbar */
+nav ul {
+    display: flex;
+    list-style: none;
+    align-items: center;
+}
+
+nav ul li {
+    position: relative;
+    margin-left: 8px; /* tighter spacing to fit one line */
+}
+
+nav ul li a {
+    text-decoration: none;
+    color: var(--dark);
+    font-weight: 500;
+    transition: color 0.3s;
+    padding: 6px 10px; /* smaller padding to save width */
+    display: block;
+}
+
+nav ul li a:hover,
+nav ul li a.active {
+    color: var(--primary);
+}
+
+/* Dropdown Menu */
+.dropdown {
+    position: relative;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: white;
+    min-width: 180px;
+    border-radius: 6px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    z-index: 1000;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border: 1px solid #e0e0e0;
+}
+
+.dropdown-content li {
+    margin: 0;
+    padding: 0;
+}
+
+.dropdown-content li a {
+    display: block;
+    color: var(--dark);
+    padding: 12px 15px;
+    text-decoration: none;
+    transition: background 0.3s, color 0.3s;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.dropdown-content li:last-child a {
+    border-bottom: none;
+}
+
+.dropdown-content li a:hover {
+    background-color: var(--primary);
+    color: white;
+}
+
+/* Show dropdown on hover */
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+/* More menu tweaks */
+.more-menu > a { cursor: pointer; }
+.more-menu .dropdown-content { min-width: 180px; }
+
+/* Header Container & Responsiveness */
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 0;
+}
+
+.logo {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--primary);
+    text-decoration: none;
+}
+
+.logo span {
+    color: var(--secondary);
+}
+
+/* Auth Buttons */
+.auth-buttons a {
+    margin-left: 10px;
+}

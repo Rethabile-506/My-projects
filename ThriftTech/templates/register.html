@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - ThriftTech</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style2.css') }}">
+</head>
+
+<body>
+    <!-- Header Section (copied from index.html for consistency) -->
+    <header>
+        <div class="container header-container">
+            <a class="logo" href="/home">Thrift<span>Tech</span></a>
+
+            <nav class="navbar">
+                <ul>
+                    <li class="dropdown">
+                        <a href="#">Categories</a>
+                        <ul class="dropdown-content">
+                             <li><a href="/product">All Products</a></li>
+                            <li><a href="/product?category=Smartphones">Smartphones</a></li>
+                            <li><a href="/product?category=Laptops">Laptops</a></li>
+                            <li><a href="/product?category=Cameras">Cameras</a></li>
+                            <li><a href="/product?category=Gaming Console">Gaming Console</a></li>
+                            <li><a href="/product?category=Audio Equipment">Audio Equipment</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </nav>
+
+            <nav>
+                <ul>
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/sell">Sell</a></li>
+                    <li><a href="/rent">Rent</a></li>
+                    <li><a href="/auction">Auction</a></li>
+                    <li><a href="/repair">Repair</a></li>
+
+                    <li><a href="/cart"><i class="fas fa-shopping-cart"></i> Cart</a></li>
+                    <li><a href="#orders"><i class="fas fa-clipboard-list"></i> Orders</a></li>
+                    <!-- Removed duplicate My Account link -->
+                </ul>
+            </nav>
+
+            <div class="auth-buttons">
+                {% if session.logged_in %}
+                    <span class="user-welcome">Welcome, {{ session.email }}!</span>
+                    <a class="btn btn-outline" href="{{ url_for('user.logout') }}">Logout</a>
+                {% else %}
+                    <a class="btn btn-outline" href="{{ url_for('user.login') }}">Login</a>
+                    <a class="btn btn-primary" href="{{ url_for('user.register') }}">Register</a>
+                {% endif %}
+            </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Register Page -->
+        <div id="register" class="page-content active">
+            <div class="page-header">
+                <h2>Create an Account</h2>
+                <p>Join the ThriftTech community</p>
+            </div>
+
+            <div class="register-form">
+                <h3>Sign Up</h3>
+                
+                <!-- Flashed messages from Flask -->
+                {% with messages = get_flashed_messages() %}
+                  {% if messages %}
+                    <ul class="flashes">
+                    {% for message in messages %}
+                      <li>{{ message }}</li>
+                    {% endfor %}
+                    </ul>
+                  {% endif %}
+                {% endwith %}
+
+                <!-- Form submits to /register -->
+                <form method="POST" action="{{ url_for('user.register') }}">
+                    <div class="form-group">
+                        <label for="register-name">Full Name</label>
+                        <input type="text" id="register-name" name="FullName" placeholder="Enter your full name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-email">Email Address</label>
+                        <input type="email" id="register-email" name="Email" placeholder="Enter your email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-password">Password</label>
+                        <input type="password" id="register-password" name="PasswordHash" placeholder="Create a password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-confirm">Confirm Password</label>
+                        <input type="password" id="register-confirm" name="confirm_PasswordHash" placeholder="Confirm your password" required>
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">Create Account</button>
+                    </div>
+                </form>
+                <p>Already have an account? <a href="{{ url_for('user.login') }}" style="color: var(--primary); cursor: pointer;">Login here</a></p>
+            </div>
+
+            <div class="services">
+                <div class="section-title">
+                    <h2>Benefits of Registering</h2>
+                </div>
+                <div class="services-grid">
+                    <div class="service-card">
+                        <div class="service-icon"><i class="fas fa-heart"></i></div>
+                        <h3>Save Favorites</h3>
+                        <p>Save items you're interested in for later.</p>
+                    </div>
+                    <div class="service-card">
+                        <div class="service-icon"><i class="fas fa-bell"></i></div>
+                        <h3>Get Alerts</h3>
+                        <p>Receive notifications for price drops and new listings.</p>
+                    </div>
+                    <div class="service-card">
+                        <div class="service-icon"><i class="fas fa-history"></i></div>
+                        <h3>Track Orders</h3>
+                        <p>Monitor your purchases, sales, and repairs in one place.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Section -->
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-column">
+                    <h3>ThriftTech</h3>
+                    <p>Your one-stop marketplace for buying, selling, renting, and repairing tech gadgets.</p>
+                </div>
+                <div class="footer-column">
+                    <h3>Help & Support</h3>
+                    <ul>
+                        <li><a href="#">FAQ</a></li>
+                        <li><a href="#">Shipping & Returns</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Contact Us</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Connect With Us</h3>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2025 ThriftTech. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+
+</html>

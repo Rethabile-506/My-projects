@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+   <link rel="stylesheet" href="{{ url_for('static', filename='style2.css') }}">
+</head>
+
+<body>
+
+    <!-- Header Section -->
+    <header>
+        <div class="container header-container">
+            <a class="logo" onclick="showPage('user.home')">Thrift<span>Tech</span></a>
+
+            <nav class="navbar">
+                <ul>
+                    <li class="dropdown">
+                        <a href="#">Categories</a>
+                        <ul class="dropdown-content">
+                            <li><a href="/products">All Products</a></li>
+                            <li><a href="product.html?category=Smartphones">Smartphones</a></li>
+                            <li><a href="product.html?category=Laptops">Laptops</a></li>
+                            <li><a href="product.html?category=Cameras">Cameras</a></li>
+                            <li><a href="product.html?category=Gaming Console">Gaming Console</a></li>
+                            <li><a href="product.html?category=Audio Equipment">Audio Equipment</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </nav>
+
+            <nav>
+                <ul>
+                    <li><a onclick href="/">Home</a></li>
+                    <li><a onclick href="/sell">Sell</a></li>
+                    <li><a class="active" onclick="showPage('rent')">Rent</a></li>
+                    <li><a onclick href="/auction">Auction</a></li>
+                    <li><a onclick href="/repair">Repair</a></li>
+
+                    <li><a href="/cart"><i class="fas fa-shopping-cart"></i> Cart</a></li>
+                    {% if session.logged_in %}
+                        <li><a href="{{ url_for('user.invoices') }}"><i class="fas fa-file-invoice"></i> Invoices</a></li>
+                        <li><a href="{{ url_for('user.orders') }}"><i class="fas fa-clipboard-list"></i> Orders</a></li>
+                        <li><a href="{{ url_for('user.account') }}"><i class="fas fa-user-circle"></i> Account</a></li>
+                        {% if session.role == 'admin' %}
+                        <li><a href="{{ url_for('admin.dashboard') }}"><i class="fas fa-cog"></i> Admin</a></li>
+                        {% endif %}
+                    {% else %}
+                        <li><a href="{{ url_for('user.login', next=request.url) }}">Login</a></li>
+                        <li><a href="{{ url_for('user.register') }}">Register</a></li>
+                    {% endif %}
+                        <!-- Removed duplicate My Account link -->
+                </ul>
+            </nav>
+
+            <div class="welcome-strip">
+                {% if session.logged_in %}
+                    <span class="user-welcome">Welcome, {{ session.email }}!</span>
+                {% endif %}
+            </div>
+
+            <div class="nav-auth">
+                {% if session.logged_in %}
+                    <a class="btn btn-outline" href="{{ url_for('user.logout') }}">Logout</a>
+                {% else %}
+                    <a class="btn btn-outline" href="{{ url_for('user.login', next=request.url) }}">Login</a>
+                    <a class="btn btn-primary" href="{{ url_for('user.register') }}">Register</a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+
+    <div class="container">
+        <!-- Rent Page -->
+        <div id="rent" class="page-content active">
+            <div class="page-header">
+                <h2>Rent Gadgets</h2>
+                <p>Access high-end tech without the commitment</p>
+            </div>
+
+            <div class="filters">
+                <h3>Find Rental Equipment</h3>
+                <div class="filter-group">
+                    <label for="rental-category">Category</label>
+                    <select id="rental-category">
+                        <option value="">All Categories</option>
+                        <option value="cameras">Cameras & Lenses</option>
+                        <option value="drones">Drones</option>
+                        <option value="audio">Audio Equipment</option>
+                        <option value="gaming">Gaming Consoles</option>
+                        <option value="vr">VR Headsets</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="rental-dates">Rental Dates</label>
+                    <input type="text" id="rental-dates" placeholder="Select dates">
+                </div>
+                <div class="filter-group">
+                    <label for="rental-location">Location</label>
+                    <input type="text" id="rental-location" placeholder="Enter your location">
+                </div>
+                <button class="btn btn-primary">Search Rentals</button>
+            </div>
+
+            <div class="products-grid">
+                {% if available_products %}
+                    {% for product in available_products %}
+                    <div class="product-card">
+                        <div class="product-image">
+                       {% set rph = 'https://via.placeholder.com/300x200/6C757D/FFFFFF?text=' ~ (product.Title | replace(' ', '+')) %}
+                       <img src="{{ product.Photo if product.Photo else rph }}" 
+                           alt="{{ product.Title }}" 
+                           onerror="this.src='{{ rph }}'; this.onerror=null;">
+                        </div>
+                        <div class="product-info">
+                            <h3>{{ product.Title }}</h3>
+                            <p>{{ product.Description }}</p>
+                            <div class="product-price">R{{ "%.2f"|format(product.DailyRate) }}/day</div>
+                            <div class="product-purchase-price">Purchase: R{{ "%.2f"|format(product.Price) }}</div>
+                            
+                            {% if session.user_id %}
+                            <button class="btn btn-primary rent-btn"
+                                    data-product-id="{{ product.ProductId }}"
+                                    data-product-title="{{ product.Title }}"
+                                    data-daily-rate="{{ product.DailyRate }}">
+                                Rent Now
+                            </button>
+                            {% else %}
+                            <a href="{{ url_for('user.login', next=request.url) }}" class="btn btn-primary">
+                                Login to Rent
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-products">
+                        <p>No products available for rental at the moment.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- User's Current Rentals -->
+            {% if session.user_id and user_rentals %}
+            <div class="user-rentals">
+                <div class="section-title">
+                    <h2>Your Current Rentals</h2>
+                </div>
+                <div class="rentals-grid">
+                    {% for rental in user_rentals %}
+                    <div class="rental-card">
+                        <div class="rental-image">
+                            <img src="{{ rental.Photo if rental.Photo else 'https://via.placeholder.com/200x150/6C757D/FFFFFF?text=' + rental.Title|replace(' ', '+') }}" 
+                                 alt="{{ rental.Title }}">
+                        </div>
+                        <div class="rental-info">
+                            <h4>{{ rental.Title }}</h4>
+                            <p><strong>Rental Period:</strong> {{ rental.RentalDate.strftime('%Y-%m-%d') }} to {{ rental.ReturnDate.strftime('%Y-%m-%d') }}</p>
+                            <p><strong>Daily Rate:</strong> R{{ "%.2f"|format(rental.DailyRate) }}</p>
+                            <p><strong>Total Cost:</strong> R{{ "%.2f"|format(rental.TotalCost) }}</p>
+                            <p><strong>Status:</strong> <span class="status-{{ rental.Status }}">{{ rental.Status.title() }}</span></p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="services">
+                <div class="section-title">
+                    <h2>How Renting Works</h2>
+                </div>
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <h3>Browse & Select</h3>
+                        <p>Choose the equipment you need and select rental dates.</p>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <h3>Place Order</h3>
+                        <p>Complete checkout with payment and verification.</p>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <h3>Receive Equipment</h3>
+                        <p>Get your gear delivered or pick up from a local partner.</p>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <h3>Return & Review</h3>
+                        <p>Return the equipment and share your experience.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.rent-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const id = parseInt(btn.getAttribute('data-product-id'));
+                    const title = btn.getAttribute('data-product-title');
+                    const rate = parseFloat(btn.getAttribute('data-daily-rate'));
+                    if (typeof openRentalModal === 'function') {
+                        openRentalModal(id, title, rate);
+                    }
+                });
+            });
+        });
+    </script>
+
+
+
+    <!-- Footer Section -->
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-column">
+                    <h3>ThriftTech</h3>
+                    <p>Your one-stop marketplace for buying, selling, renting, and repairing tech gadgets.</p>
+                </div>
+                <div class="footer-column">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a onclick="showPage('home')">Home</a></li>
+                        <li><a onclick="showPage('buy')">Buy</a></li>
+                        <li><a onclick="showPage('sell')">Sell</a></li>
+                        <li><a onclick="showPage('rent')">Rent</a></li>
+                        <li><a onclick="showPage('auction')">Auction</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Help & Support</h3>
+                    <ul>
+                        <li><a href="#">FAQ</a></li>
+                        <li><a href="#">Shipping & Returns</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Contact Us</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Connect With Us</h3>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2025 ThriftTech. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Rental Modal -->
+    <div id="rentalModal" class="modal">
+        <div class="modal-content rental-inline-modal">
+            <span class="close" onclick="closeRentalModal()">&times;</span>
+            <h2>Rent Item</h2>
+            <form id="rentalForm" method="POST" action="{{ url_for('rent') }}">
+                <input type="hidden" id="modal_product_id" name="product_id">
+                <input type="hidden" id="modal_daily_rate" name="daily_rate">
+
+                <div class="rental-inline">
+                    <div class="inline-field">
+                        <label>Product</label>
+                        <span id="modal_product_name" class="inline-value"></span>
+                    </div>
+
+                    <div class="inline-field">
+                        <label>Daily Rate</label>
+                        <span id="modal_rate_display" class="inline-value"></span>
+                    </div>
+
+                    <div class="inline-field grow">
+                        <label>Rental Period</label>
+                        <div class="date-row">
+                            <div class="date-field">
+                                <input type="date" id="rental_date" name="rental_date" required min="{{ today }}">
+                            </div>
+                            <span class="date-sep">to</span>
+                            <div class="date-field">
+                                <input type="date" id="return_date" name="return_date" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="inline-field">
+                        <label>Estimated Total</label>
+                        <span id="total_cost" class="inline-value">R0.00</span>
+                    </div>
+
+                    <div class="inline-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeRentalModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Confirm Rental</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                        <button onclick="this.parentElement.style.display='none'" class="alert-close">&times;</button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <script>
+        let currentDailyRate = 0;
+
+        function openRentalModal(productId, productName, dailyRate) {
+            document.getElementById('modal_product_id').value = productId;
+            document.getElementById('modal_daily_rate').value = dailyRate;
+            document.getElementById('modal_product_name').textContent = productName;
+            document.getElementById('modal_rate_display').textContent = 'R' + dailyRate.toFixed(2) + '/day';
+            currentDailyRate = dailyRate;
+            
+            // Set minimum date to today
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('rental_date').min = today;
+            document.getElementById('return_date').min = today;
+            
+            document.getElementById('rentalModal').style.display = 'block';
+        }
+
+        function closeRentalModal() {
+            document.getElementById('rentalModal').style.display = 'none';
+            document.getElementById('rentalForm').reset();
+        }
+
+        function calculateTotal() {
+            const startDate = document.getElementById('rental_date').value;
+            const endDate = document.getElementById('return_date').value;
+            
+            if (startDate && endDate) {
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                const diffTime = Math.abs(end - start);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                if (diffDays > 0) {
+                    const total = diffDays * currentDailyRate;
+                    document.getElementById('total_cost').textContent = 'R' + total.toFixed(2) + ' (' + diffDays + ' days)';
+                } else {
+                    document.getElementById('total_cost').textContent = 'R0.00';
+                }
+            }
+        }
+
+        // Add event listeners for date changes
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('rental_date').addEventListener('change', calculateTotal);
+            document.getElementById('return_date').addEventListener('change', calculateTotal);
+            
+            // Update return date minimum when start date changes
+            document.getElementById('rental_date').addEventListener('change', function() {
+                const startDate = this.value;
+                if (startDate) {
+                    // Set minimum return date to the day after start date
+                    const nextDay = new Date(startDate);
+                    nextDay.setDate(nextDay.getDate() + 1);
+                    document.getElementById('return_date').min = nextDay.toISOString().split('T')[0];
+                }
+            });
+
+            // Auto-hide flash messages after 5 seconds
+            setTimeout(function() {
+                const flashMessages = document.querySelectorAll('.flash-messages .alert');
+                flashMessages.forEach(function(msg) {
+                    msg.style.display = 'none';
+                });
+            }, 5000);
+        });
+
+        // Close modal when clicking outside of it
+        window.onclick = function(event) {
+            const modal = document.getElementById('rentalModal');
+            if (event.target == modal) {
+                closeRentalModal();
+            }
+        }
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,42 @@
+{% extends 'home.html' %}
+{% block content %}
+<div class="container">
+    <h1>Order #{{ order.OrderId }}</h1>
+    <p><strong>Status:</strong> {{ order.Status|title }}</p>
+    <div class="order-items">
+        {% for it in items %}
+        <div class="order-item">
+            <img src="{{ it.Photo or 'https://via.placeholder.com/80x80?text=No+Image' }}" alt="{{ it.Title }}" style="width:80px;height:80px;object-fit:cover;">
+            <div class="details">
+                <h4>{{ it.Title }}</h4>
+                <div>Qty: {{ it.Quantity }}</div>
+                <div>Price: R{{ '%.2f'|format(it.Price) }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <h3>Totals</h3>
+    <ul>
+        <li>Subtotal: R{{ '%.2f'|format(totals.subtotal) }}</li>
+        <li>VAT: R{{ '%.2f'|format(totals.tax) }}</li>
+        <li>Shipping: R{{ '%.2f'|format(totals.shipping) }}</li>
+        {% if totals.discount > 0 %}
+        <li>Discounts: -R{{ '%.2f'|format(totals.discount) }}</li>
+        {% endif %}
+        <li><strong>Total: R{{ '%.2f'|format(totals.total) }}</strong></li>
+    </ul>
+
+    <div class="order-actions">
+        {% if order.Status in ['pending','processing'] %}
+        <form method="POST" action="{{ url_for('user.cancel_order', order_id=order.OrderId) }}" style="display:inline;" onsubmit="return confirm('Cancel this order?')">
+            <button type="submit" class="btn btn-danger">Cancel Order</button>
+        </form>
+        {% endif %}
+        <form method="POST" action="{{ url_for('user.reorder', order_id=order.OrderId) }}" style="display:inline;">
+            <button type="submit" class="btn btn-primary">Reorder Items</button>
+        </form>
+        <a href="{{ url_for('user.orders') }}" class="btn btn-outline">Back to Orders</a>
+    </div>
+</div>
+{% endblock %}

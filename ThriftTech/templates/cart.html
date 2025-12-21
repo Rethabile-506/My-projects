@@ -1,0 +1,338 @@
+<!-- telling browser this is a modern html page -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- setting up page to display properly on all devices -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- page title that shows in browser tab -->
+    <title>Shopping Cart - ThriftTech</title>
+    <!-- loading font awesome icons for cart and other symbols -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- loading our main website styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- loading additional cart-specific styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style2.css') }}">
+</head>
+<body>
+    <!-- top navigation bar section -->
+    <header>
+        <!-- container to keep header content centered and organized -->
+        <div class="container header-container">
+            <!-- website logo that links back to homepage -->
+            <a class="logo" href="/">Thrift<span>Tech</span></a>
+
+            <!-- main navigation menu -->
+            <nav>
+                <ul>
+                    <!-- link to homepage -->
+                    <li><a href="/">Home</a></li>
+                    <!-- browse all products page -->
+                    <li><a href="/product">Products</a></li>
+                    <!-- page to sell your own items -->
+                    <li><a href="/sell">Sell</a></li>
+                    <!-- page to rent items from others -->
+                    <li><a href="/rent">Rent</a></li>
+                    <!-- auction page for bidding on items -->
+                    <li><a href="/auction">Auction</a></li>
+                    <!-- repair services page -->
+                    <li><a href="/repair">Repair</a></li>
+                    <!-- shopping cart page (currently active/highlighted) -->
+                    <li><a class="active" href="/cart"><i class="fas fa-shopping-cart"></i> Cart</a></li>
+                    <!-- view your order history -->
+                    <li><a href="{{ url_for('user.orders') }}"><i class="fas fa-clipboard-list"></i> Orders</a></li>
+                    <!-- if user is logged in, show additional menu items -->
+                    {% if session.logged_in %}
+                        <!-- view your invoices and receipts -->
+                        <li><a href="{{ url_for('user.invoices') }}"><i class="fas fa-file-invoice"></i> Invoices</a></li>
+                        <!-- if user is admin, show admin dashboard link -->
+                        {% if session.role == 'admin' %}
+                        <li><a href="{{ url_for('admin.dashboard') }}"><i class="fas fa-cog"></i> Admin</a></li>
+                        {% endif %}
+                    {% endif %}
+                    <!-- link to user account settings -->
+                    <li><a href="{{ url_for('user.account') }}"><i class="fas fa-user-circle"></i> Account</a></li>
+                </ul>
+            </nav>
+
+            <!-- welcoming message area for logged in users -->
+            <div class="welcome-strip">
+                <!-- if someone is logged in, greet them by email -->
+                {% if session.logged_in %}
+                    <span class="user-welcome">Welcome, {{ session.email }}!</span>
+                {% endif %}
+            </div>
+
+            <!-- login/logout buttons section -->
+            <div class="nav-auth">
+                <!-- if user is already logged in, show logout option -->
+                {% if session.logged_in %}
+                    <a class="btn btn-outline" href="{{ url_for('user.logout') }}">Logout</a>
+                <!-- if not logged in, show login and register buttons -->
+                {% else %}
+                    <a class="btn btn-outline" href="{{ url_for('user.login', next=request.url) }}">Login</a>
+                    <a class="btn btn-primary" href="{{ url_for('user.register') }}">Register</a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        <h1><i class="fas fa-shopping-cart"></i> Your Shopping Cart</h1>
+
+        {% if cart_items %}
+        <div class="cart-content">
+            <div class="cart-items">
+                {% for item in cart_items %}
+                <div class="cart-item">
+                    <div class="item-image">
+                        <img src="{{ item.Photo }}" alt="{{ item.Title }}" onerror="this.src='https://via.placeholder.com/100x100?text=No+Image'">
+                    </div>
+                    <div class="item-details">
+                        <h3>{{ item.Title }}</h3>
+                        <p class="item-description">{{ item.Description[:100] }}...</p>
+                        <p class="item-price">R{{ "%.2f"|format(item.Price) }} each</p>
+                    </div>
+                    <div class="item-quantity">
+                        <form method="POST" action="{{ url_for('user.update_cart', cart_id=item.CartId) }}" style="display: inline;">
+                            <label for="quantity-{{ item.CartId }}">Qty:</label>
+                            <input type="number" id="quantity-{{ item.CartId }}" name="quantity" value="{{ item.Quantity }}" min="1" max="10" onchange="this.form.submit()">
+                        </form>
+                    </div>
+                    <div class="item-total">
+                        <strong>R{{ "%.2f"|format(item.Total) }}</strong>
+                    </div>
+                    <div class="item-actions">
+                        <a href="{{ url_for('user.remove_from_cart', cart_id=item.CartId) }}" 
+                           class="btn btn-danger btn-sm"
+                           onclick="return confirm('Remove this item from cart?')">
+                            <i class="fas fa-trash"></i> Remove
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="cart-summary">
+                <div class="summary-card">
+                    <h2>Order Summary</h2>
+                    
+                    <div class="summary-line">
+                        <span>Subtotal:</span>
+                        <span>R{{ "%.2f"|format(totals.subtotal) }}</span>
+                    </div>
+                    
+                    {% if totals.shipping > 0 %}
+                    <div class="summary-line">
+                        <span>Shipping:</span>
+                        <span>R{{ "%.2f"|format(totals.shipping) }}</span>
+                    </div>
+                    {% else %}
+                    <div class="summary-line">
+                        <span>Shipping:</span>
+                        <span class="free-shipping">FREE (orders over R500)</span>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="summary-line">
+                        <span>VAT (15%):</span>
+                        <span>R{{ "%.2f"|format(totals.tax) }}</span>
+                    </div>
+                    
+                    {% if totals.loyalty_discount > 0 %}
+                    <div class="summary-line discount">
+                        <span>Loyalty Points Discount:</span>
+                        <span>-R{{ "%.2f"|format(totals.loyalty_discount) }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if totals.bulk_discount > 0 %}
+                    <div class="summary-line discount">
+                        <span>Bulk Discount (5% on orders over R1000):</span>
+                        <span>-R{{ "%.2f"|format(totals.bulk_discount) }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if totals.total_discount > 0 %}
+                    <div class="summary-line discount total-discount">
+                        <span><strong>Total Discounts:</strong></span>
+                        <span><strong>-R{{ "%.2f"|format(totals.total_discount) }}</strong></span>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="summary-line total">
+                        <span><strong>Total:</strong></span>
+                        <span><strong>R{{ "%.2f"|format(totals.total) }}</strong></span>
+                    </div>
+                    
+                    <div class="checkout-actions">
+                        <a href="{{ url_for('user.checkout') }}" class="btn btn-primary btn-large">
+                            <i class="fas fa-credit-card"></i> Proceed to Checkout
+                        </a>
+                        <a href="/product" class="btn btn-outline">Continue Shopping</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="empty-cart">
+            <div class="empty-cart-icon">
+                <i class="fas fa-shopping-cart"></i>
+            </div>
+            <h2>Your cart is empty</h2>
+            <p>Looks like you haven't added any items to your cart yet.</p>
+            <a href="/product" class="btn btn-primary">Start Shopping</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <style>
+        .cart-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin: 20px 0;
+        }
+
+        .cart-item {
+            display: grid;
+            grid-template-columns: 100px 1fr auto auto auto;
+            gap: 15px;
+            align-items: center;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            background: white;
+        }
+
+        .item-image img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+        .item-details h3 {
+            margin: 0 0 5px 0;
+            color: #333;
+        }
+
+        .item-description {
+            color: #666;
+            font-size: 0.9em;
+            margin: 5px 0;
+        }
+
+        .item-price {
+            color: #e74c3c;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .item-quantity input {
+            width: 60px;
+            padding: 5px;
+            text-align: center;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .item-total {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .summary-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+
+        .summary-card h2 {
+            margin: 0 0 20px 0;
+            color: #333;
+        }
+
+        .summary-line {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 5px 0;
+        }
+
+        .summary-line.total {
+            border-top: 2px solid #ddd;
+            margin-top: 15px;
+            padding-top: 15px;
+            font-size: 1.2em;
+        }
+
+        .summary-line.discount span:last-child {
+            color: #27ae60;
+        }
+
+        .free-shipping {
+            color: #27ae60;
+            font-weight: bold;
+        }
+
+        .checkout-actions {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .btn-large {
+            padding: 12px 20px;
+            font-size: 1.1em;
+        }
+
+        .empty-cart {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-cart-icon {
+            font-size: 4em;
+            color: #ddd;
+            margin-bottom: 20px;
+        }
+
+        .empty-cart h2 {
+            margin: 20px 0 10px 0;
+        }
+
+        .empty-cart p {
+            margin: 10px 0 30px 0;
+        }
+
+        @media (max-width: 768px) {
+            .cart-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .cart-item {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+        }
+    </style>
+</body>
+</html>

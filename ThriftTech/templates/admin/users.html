@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin • Users</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style2.css') }}">
+  <style>
+    .admin-header { display:flex; align-items:center; justify-content:space-between; margin: 24px 0; }
+    .admin-header h1 { margin:0; font-size: 1.6rem; }
+    .table { width:100%; border-collapse: collapse; }
+    .table th, .table td { padding: 10px 12px; border-bottom: 1px solid #eee; text-align:left; }
+    .badge { display:inline-block; padding: 4px 10px; border-radius: 12px; font-size:.85rem; }
+    .badge-admin { background:#eaf3ff; color:#0050b3; }
+    .badge-customer { background:#f6ffed; color:#237804; }
+    .actions a { margin-right:8px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container header-container">
+      <a class="logo" href="/">Thrift<span>Tech</span></a>
+      <nav>
+        <ul>
+          <li><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+          <li><a href="{{ url_for('admin.admin_products') }}">Products</a></li>
+          <li><a class="active" href="{{ url_for('admin.manage_users') }}">Users</a></li>
+          <li><a href="{{ url_for('admin.reports') }}">Reports</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container admin-content">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-messages">
+          {% for category, message in messages %}
+            <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <div class="admin-header">
+      <h1><i class="fas fa-users"></i> Users</h1>
+    </div>
+
+    <div class="card">
+      <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Role</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in users %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ u.FullName }}</td>
+            <td>{{ u.Username }}</td>
+            <td>{{ u.Email }}</td>
+            <td>
+              {% if u.Role == 'admin' %}
+                <span class="badge badge-admin">Admin</span>
+              {% else %}
+                <span class="badge badge-customer">Customer</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+          {% if not users %}
+          <tr>
+            <td colspan="5">No users found.</td>
+          </tr>
+          {% endif %}
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <div class="container">
+        <!-- Login Page -->
+        <div id="login" class="page-content active">
+            <div class="page-header">
+                <h2>Welcome Back</h2>
+                <p>Login to your ThriftTech account</p>
+            </div>
+
+            <div class="login-form">
+                <h3>Sign In</h3>
+
+                <!-- This section shows flashed messages from Flask -->
+                {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                <ul class="flashes">
+                    {% for message in messages %}
+                    <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+                {% endwith %}
+
+                <!-- This form submits data to the /login route -->
+                <form method="POST" action="{{ url_for('user.login') }}">
+                    <!-- Hidden field to preserve the next page -->
+                    {% if session.next_page %}
+                    <input type="hidden" name="next" value="{{ session.next_page }}">
+                    {% endif %}
+                    
+                    <div class="form-group">
+                        <label for="login-email">Email Address</label>
+                        <input type="email" id="login-email" name="Email" placeholder="Enter your email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" name="PasswordHash" placeholder="Enter your password"
+                            required>
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">Login</button>
+                    </div>
+                </form>
+                <p>Don't have an account? <a href="{{ url_for('user.register') }}"
+                        style="color: var(--primary); cursor: pointer;">Register here</a></p>
+            </div>
+        </div>
+
+        <!-- Remaining content can be added here -->
+    </div>
+
+</body>
+
+</html>

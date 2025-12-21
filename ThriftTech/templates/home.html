@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- basic page setup and mobile responsiveness -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThriftTech - Buy, Fix, Sell, Rent & Auction Gadgets</title>
+    <!-- load fontawesome icons for buttons and ui elements -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- load our custom styles for layout and design -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style2.css') }}">
+
+</head>
+
+<body>
+    <!-- main navigation header that appears on every page -->
+    <header>
+        <div class="container header-container">
+            <!-- clickable logo that takes you back to home -->
+            <a class="logo" href="/">Thrift<span>Tech</span></a>
+
+            <!-- main navigation menu with categories dropdown and all site sections -->
+            <nav>
+                <ul>
+                    <!-- dropdown menu for product categories -->
+                    <li class="dropdown">
+                        <a href="#">Categories</a>
+                        <ul class="dropdown-content">
+                             <li><a href="/product">All Products</a></li>
+                            <li><a href="/product?category=Smartphones">Smartphones</a></li>
+                            <li><a href="/product?category=Laptops">Laptops</a></li>
+                            <li><a href="/product?category=Cameras">Cameras</a></li>
+                            <li><a href="/product?category=Gaming Console">Gaming Console</a></li>
+                            <li><a href="/product?category=Audio Equipment">Audio Equipment</a></li>
+                        </ul>
+                    </li>
+                    <li><a class="active" href="/">Home</a></li>
+                    <li><a href="/sell">Sell</a></li>
+                    <li><a href="/rent">Rent</a></li>
+                    <li><a href="/auction">Auction</a></li>
+                    <li><a href="/repair">Repair</a></li>
+                    <li><a href="/cart"><i class="fas fa-shopping-cart"></i> Cart</a></li>
+                    <!-- show user account links only if they're logged in -->
+                    {% if session.logged_in %}
+                        <li><a href="{{ url_for('user.invoices') }}"><i class="fas fa-file-invoice"></i> Invoices</a></li>
+                        <li><a href="{{ url_for('user.orders') }}"><i class="fas fa-clipboard-list"></i> Orders</a></li>
+                        <li><a href="{{ url_for('user.account') }}"><i class="fas fa-user-circle"></i> Account</a></li>
+                        {% if session.role == 'admin' %}
+                        <li><a href="{{ url_for('admin.dashboard') }}"><i class="fas fa-cog"></i> Admin</a></li>
+                        {% endif %}
+                    {% endif %}
+                </ul>
+            </nav>
+
+            <div class="welcome-strip">
+                {% if session.logged_in %}
+                    <span class="user-welcome">Welcome, {{ session.email }}!</span>
+                {% endif %}
+            </div>
+
+            <div class="nav-auth">
+                {% if session.logged_in %}
+                    <a class="btn btn-outline" href="{{ url_for('user.logout') }}">Logout</a>
+                {% else %}
+                    <a class="btn btn-outline" href="{{ url_for('user.login', next=request.url) }}">Login</a>
+                    <a class="btn btn-primary" href="{{ url_for('user.register') }}">Register</a>
+                {% endif %}
+            </div>
+
+        </div>
+    </header>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }}">
+                        {{ message }}
+                        <button type="button" class="btn-close" onclick="this.parentElement.style.display='none'">&times;</button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+ 
+    {% block content %}
+    <!-- ...existing home page HTML... -->
+
+<div id="product-list">
+    {% for product in products %}
+      <div class="product">
+        <div class="product-image-container">
+          <img src="{{ product.Photo or 'https://via.placeholder.com/300x200/6C757D/FFFFFF?text=No+Image' }}" 
+               alt="{{ product.Title }}" 
+               onerror="this.src='https://via.placeholder.com/300x200/6C757D/FFFFFF?text=Image+Error'; this.onerror=null;"
+               loading="lazy">
+        </div>
+        <h2>{{ product.Title }}</h2>
+        <p class="product-description">{{ product.Description[:100] }}{% if product.Description|length > 100 %}...{% endif %}</p>
+        <p class="product-price"><strong>Price: R{{ "%.2f"|format(product.Price) }}</strong></p>
+        
+        <div class="product-actions">
+          <a href="/product/{{ product.ProductId }}" class="btn btn-outline btn-sm">
+            <i class="fas fa-eye"></i> View Details
+          </a>
+                    {% if session.logged_in %}
+                        <form method="POST" action="{{ url_for('user.add_to_cart', product_id=product.ProductId) }}" style="display:inline;">
+                            <input type="hidden" name="quantity" value="1">
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                <i class="fas fa-shopping-cart"></i> Add to Cart
+                            </button>
+                        </form>
+                    {% else %}
+            <a href="{{ url_for('user.login', next=request.url) }}" class="btn btn-primary btn-sm">
+              <i class="fas fa-shopping-cart"></i> Add to Cart
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %} 
+</div>
+
+<!-- ...rest of your home page HTML... -->
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Home Page -->
+        <div id="home" class="page-content active">
+            <section class="hero">
+                <h2>Buy, Fix, Sell, Rent & Auction Gadgets Across Mzansi</h2>
+                <p>Your one-stop marketplace for all things tech in South Africa. Discover amazing deals on refurbished gadgets, rent
+                    high-end equipment, or auction your collectibles. From Cape Town to Joburg, we've got you covered!</p>
+                <a class="btn btn-primary" href="/product">Explore Now</a>
+            </section>
+
+            <section class="services">
+                <div class="section-title">
+                    <h2>Our Services</h2>
+                    <p>Everything you need for your tech lifestyle in South Africa</p>
+                </div>
+                <div class="services-grid">
+                    <div class="service-card">
+                        <div class="service-icon"><i class="fas fa-shopping-cart"></i></div>
+                        <h3>Buy Gadgets</h3>
+                        <p>Find great deals on refurbished and new gadgets at competitive Rand prices. From Sandton to the Waterfront.</p>
+                    </div>
+                    <div class="service-card">
+                        <div class="service-icon"><i class="fas fa-tools"></i></div>
+                        <h3>Repair Services</h3>
+                        <p>Fix your broken devices with our trusted repair partners across SA. Load shedding-proof repairs!</p>
+                    </div>
+                    <div class="service-card">
+                        <div class="service-icon"><i class="fas fa-coins"></i></div>
+                        <h3>Sell Your Tech</h3>
+                        <p>Turn your old gadgets into Rands or trade them for store credit. Cash in hand!</p>
+                    </div>
+                    <div class="service-card">
+                        <div class="service-icon"><i class="fas fa-calendar-alt"></i></div>
+                        <h3>Rent Equipment</h3>
+                        <p>Rent high-end or niche gadgets for short-term use. Perfect for events and projects.</p>
+                    </div>
+                    <div class="service-card">
+                        <div class="service-icon"><i class="fas fa-gavel"></i></div>
+                        <h3>Auction Items</h3>
+                        <p>Bid on rare, limited-edition, or collectible items. Find unique treasures!</p>
+                    </div>
+                </div>
+            </section>
+
+
+            <section class="how-it-works">
+                <div class="section-title">
+                    <h2>How It Works</h2>
+                    <p>Simple steps to buy, sell, rent or repair</p>
+                </div>
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <h3>Create Account</h3>
+                        <p>Sign up for free in just a few minutes</p>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <h3>Browse or List</h3>
+                        <p>Find what you need or list items for sale</p>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <h3>Transact Securely</h3>
+                        <p>Complete transactions with buyer/seller protection</p>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <h3>Enjoy!</h3>
+                        <p>Get your item delivered or schedule repair</p>
+                    </div>
+                </div>
+            </section>
+
+        
+        <div class="services">
+            <div class="section-title">
+                <h2>Why Sell with ThriftTech?</h2>
+            </div>
+            <div class="services-grid">
+                <div class="service-card">
+                    <div class="service-icon"><i class="fas fa-shield-alt"></i></div>
+                    <h3>Seller Protection</h3>
+                    <p>We verify all buyers and protect your transactions.</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon"><i class="fas fa-truck"></i></div>
+                    <h3>Free Shipping</h3>
+                    <p>We provide prepaid shipping labels for sold items.</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon"><i class="fas fa-money-bill-wave"></i></div>
+                    <h3>Quick Payout</h3>
+                    <p>Get paid within 24 hours after your item is delivered.</p>
+                </div>
+            </div>
+
+            <!-- Testimonials Section -->
+            <section class="testimonials">
+                <div class="section-title">
+                    <h2>What Our Customers Say</h2>
+                    <p>Hear from satisfied customers across South Africa</p>
+                </div>
+                <div class="testimonials-grid">
+                    <div class="testimonial-card">
+                        <div class="testimonial-text">
+                            "Bought a MacBook for my studies at UCT. Great price and fast delivery to Cape Town!"
+                        </div>
+                        <div class="testimonial-author">
+                            <strong>Nomsa Dlamini</strong>
+                            <span>Cape Town, Western Cape</span>
+                        </div>
+                    </div>
+                    <div class="testimonial-card">
+                        <div class="testimonial-text">
+                            "ThriftTech's repair service saved my phone! Quick and affordable service in Joburg."
+                        </div>
+                        <div class="testimonial-author">
+                            <strong>Thabo Mthembu</strong>
+                            <span>Johannesburg, Gauteng</span>
+                        </div>
+                    </div>
+                    <div class="testimonial-card">
+                        <div class="testimonial-text">
+                            "Excellent selection of cameras. Found the perfect one for my photography business in Durban."
+                        </div>
+                        <div class="testimonial-author">
+                            <strong>Zanele Khumalo</strong>
+                            <span>Durban, KwaZulu-Natal</span>
+                        </div>
+                    </div>
+                    <div class="testimonial-card">
+                        <div class="testimonial-text">
+                            "Love the rental option! Rented a gaming laptop for the weekend. Will definitely use again."
+                        </div>
+                        <div class="testimonial-author">
+                            <strong>Pieter van der Merwe</strong>
+                            <span>Pretoria, Gauteng</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+    {% endblock %}
+    <style>
+        .testimonials {
+            padding: 60px 0;
+            background: #f8f9fa;
+        }
+        
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+        
+        .testimonial-card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .testimonial-text {
+            font-style: italic;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+            line-height: 1.6;
+            color: #555;
+        }
+        
+        .testimonial-author strong {
+            color: #333;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .testimonial-author span {
+            color: #666;
+            font-size: 0.9em;
+        }
+    </style>
+
+    <!-- Footer Section -->
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-column">
+                    <h3>ThriftTech</h3>
+                    <p>Your one-stop marketplace for buying, selling, renting, and repairing tech gadgets.</p>
+                </div>
+
+                <div class="footer-column">
+                    <h3>Help & Support</h3>
+                    <ul>
+                        <li><a href="#">FAQ</a></li>
+                        <li><a href="#">Shipping & Returns</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Contact Us</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Connect With Us</h3>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2025 ThriftTech. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+
+</body>
+
+</html>

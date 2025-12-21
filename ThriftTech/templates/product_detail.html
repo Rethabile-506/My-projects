@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ product.Title }} - ThriftTech</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style2.css') }}">
+</head>
+<body>
+    <!-- Header Section -->
+    <header>
+        <div class="container header-container">
+            <a class="logo" href="/">Thrift<span>Tech</span></a>
+
+            <nav class="navbar">
+                <ul>
+                    <li class="dropdown">
+                        <a href="#">Categories</a>
+                        <ul class="dropdown-content">
+                            <li><a href="/product">All Products</a></li>
+                            <li><a href="/product?category=Smartphones">Smartphones</a></li>
+                            <li><a href="/product?category=Laptops">Laptops</a></li>
+                            <li><a href="/product?category=Cameras">Cameras</a></li>
+                            <li><a href="/product?category=Gaming Console">Gaming Console</a></li>
+                            <li><a href="/product?category=Audio Equipment">Audio Equipment</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </nav>
+
+            <nav>
+                <ul>
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/sell">Sell</a></li>
+                    <li><a href="/rent">Rent</a></li>
+                    <li><a href="/auction">Auction</a></li>
+                    <li><a href="/repair">Repair</a></li>
+                    <li><a href="/cart"><i class="fas fa-shopping-cart"></i> Cart</a></li>
+                    {% if session.logged_in %}
+                        <li><a href="{{ url_for('user.invoices') }}"><i class="fas fa-file-invoice"></i> Invoices</a></li>
+                        <li><a href="{{ url_for('user.orders') }}"><i class="fas fa-clipboard-list"></i> Orders</a></li>
+                        <li><a href="{{ url_for('user.account') }}"><i class="fas fa-user-circle"></i> Account</a></li>
+                        {% if session.role == 'admin' %}
+                        <li><a href="{{ url_for('admin.dashboard') }}"><i class="fas fa-cog"></i> Admin</a></li>
+                        {% endif %}
+                    {% else %}
+                        <li><a href="{{ url_for('user.login', next=request.url) }}">Login</a></li>
+                        <li><a href="{{ url_for('user.register') }}">Register</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+
+            <div class="welcome-strip">
+                {% if session.logged_in %}
+                    <span class="user-welcome">Welcome, {{ session.email }}!</span>
+                {% endif %}
+            </div>
+
+            <div class="nav-auth">
+                {% if session.logged_in %}
+                    <a class="btn btn-outline" href="{{ url_for('user.logout') }}">Logout</a>
+                {% else %}
+                    <a class="btn btn-outline" href="{{ url_for('user.login', next=request.url) }}">Login</a>
+                    <a class="btn btn-primary" href="{{ url_for('user.register') }}">Register</a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="product-detail">
+            <div class="product-images">
+                <img src="{{ product.Photo or 'https://via.placeholder.com/300x200/6C757D/FFFFFF?text=No+Image' }}" 
+                     alt="{{ product.Title }}" 
+                     class="main-image"
+                     onerror="this.src='https://via.placeholder.com/300x200/6C757D/FFFFFF?text=Image+Error'; this.onerror=null;"
+                     loading="lazy">
+            </div>
+            
+            <div class="product-info">
+                <h1>{{ product.Title }}</h1>
+                <p class="category">{{ product.Category }}</p>
+                <div class="price">R{{ "%.2f"|format(product.Price) }}</div>
+                
+                <div class="product-description">
+                    <h3>Description</h3>
+                    <p>{{ product.Description }}</p>
+                </div>
+
+                <div class="product-actions">
+                    <form method="POST" action="{{ url_for('user.add_to_cart', product_id=product.ProductId) }}">
+                        <div class="quantity-selector">
+                            <label for="quantity">Quantity:</label>
+                            <input type="number" id="quantity" name="quantity" value="1" min="1" max="10">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-large">
+                            <i class="fas fa-cart-plus"></i> Add to Cart
+                        </button>
+                    </form>
+                    <a href="/product" class="btn btn-outline">Back to Products</a>
+                </div>
+            </div>
+        </div>
+
+        {% if recommendations %}
+        <div class="recommendations">
+            <h2>You might also like</h2>
+            <div class="recommendations-grid">
+                {% for rec in recommendations %}
+                <div class="recommendation-card">
+                    <img src="{{ rec.Photo or 'https://via.placeholder.com/300x200/6C757D/FFFFFF?text=No+Image' }}" 
+                         alt="{{ rec.Title }}"
+                         onerror="this.src='https://via.placeholder.com/300x200/6C757D/FFFFFF?text=Image+Error'; this.onerror=null;"
+                         loading="lazy">
+                    <h4>{{ rec.Title }}</h4>
+                    <p>R{{ "%.2f"|format(rec.Price) }}</p>
+                    <a href="{{ url_for('product_detail', product_id=rec.ProductId) }}" class="btn btn-sm">View</a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <style>
+        .product-detail {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin: 20px 0;
+        }
+
+        .main-image {
+            width: 100%;
+            max-height: 500px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .product-info h1 {
+            margin: 0 0 10px 0;
+            font-size: 2em;
+        }
+
+        .category {
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0 0 15px 0;
+        }
+
+        .price {
+            font-size: 2em;
+            color: #e74c3c;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+
+        .product-description {
+            margin: 20px 0;
+        }
+
+        .quantity-selector {
+            margin: 15px 0;
+        }
+
+        .quantity-selector input {
+            width: 80px;
+            padding: 8px;
+            margin-left: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .btn-large {
+            padding: 15px 30px;
+            font-size: 1.1em;
+        }
+
+        .recommendations {
+            margin: 60px 0;
+        }
+
+        .recommendations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .recommendation-card {
+            text-align: center;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .recommendation-card img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+        .recommendation-card h4 {
+            margin: 10px 0 5px 0;
+        }
+
+        @media (max-width: 768px) {
+            .product-detail {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</body>
+</html>

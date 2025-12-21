@@ -1,0 +1,43 @@
+{% extends 'home.html' %}
+{% block content %}
+<div class="container">
+    <h1>Your Orders</h1>
+    {% if orders %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Order</th>
+                <th>Status</th>
+                <th>Total</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for o in orders %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td><a href="{{ url_for('user.order_detail', order_id=o.OrderId) }}">#{{ o.OrderId }}</a></td>
+                <td>{{ o.Status|title }}</td>
+                <td>R{{ '%.2f'|format(o.TotalAmount) }}</td>
+                <td>
+                    <a href="{{ url_for('user.order_detail', order_id=o.OrderId) }}" class="btn btn-sm btn-outline">View</a>
+                    {% if o.Status in ['pending','processing'] %}
+                    <form method="POST" action="{{ url_for('user.cancel_order', order_id=o.OrderId) }}" style="display:inline;" onsubmit="return confirm('Cancel this order?')">
+                        <button type="submit" class="btn btn-sm btn-danger">Cancel</button>
+                    </form>
+                    {% endif %}
+                    <form method="POST" action="{{ url_for('user.reorder', order_id=o.OrderId) }}" style="display:inline;">
+                        <button type="submit" class="btn btn-sm btn-primary">Reorder</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>You haven’t placed any orders yet.</p>
+    <a href="/product" class="btn btn-primary">Shop Products</a>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auction</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+   <link rel="stylesheet" href="{{ url_for('static', filename='style2.css') }}">
+</head>
+
+<body>
+
+    <!-- Header Section -->
+    <header>
+        <div class="container header-container">
+            <a class="logo" onclick="showPage('user.home')">Thrift<span>Tech</span></a>
+
+            <nav class="navbar">
+                <ul>
+                    <li class="dropdown">
+                        <a href="#">Categories</a>
+                        <ul class="dropdown-content">
+                            <li><a href="/products">All Products</a></li>
+                            <li><a href="product.html?category=Smartphones">Smartphones</a></li>
+                            <li><a href="product.html?category=Laptops">Laptops</a></li>
+                            <li><a href="product.html?category=Cameras">Cameras</a></li>
+                            <li><a href="product.html?category=Gaming Console">Gaming Console</a></li>
+                            <li><a href="product.html?category=Audio Equipment">Audio Equipment</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </nav>
+
+            <nav>
+                <ul>
+                    <li><a onclick href="/">Home</a></li>
+                    <li><a onclick href="/sell">Sell</a></li>
+                    <li><a onclick href="/rent">Rent</a></li>
+                    <li><a class="active" onclick="showPage('user.auction')">Auction</a></li>
+                    <li><a onclick href="/repair">Repair</a></li>
+
+                    <li><a href="/cart"><i class="fas fa-shopping-cart"></i> Cart</a></li>
+                    {% if session.logged_in %}
+                        <li><a href="{{ url_for('user.invoices') }}"><i class="fas fa-file-invoice"></i> Invoices</a></li>
+                        <li><a href="{{ url_for('user.orders') }}"><i class="fas fa-clipboard-list"></i> Orders</a></li>
+                        <li><a href="{{ url_for('user.account') }}"><i class="fas fa-user-circle"></i> Account</a></li>
+                        {% if session.role == 'admin' %}
+                        <li><a href="{{ url_for('admin.dashboard') }}"><i class="fas fa-cog"></i> Admin</a></li>
+                        {% endif %}
+                    {% else %}
+                        <li><a href="{{ url_for('user.login', next=request.url) }}">Login</a></li>
+                        <li><a href="{{ url_for('user.register') }}">Register</a></li>
+                    {% endif %}
+                    <!-- Removed duplicate My Account link -->
+                </ul>
+            </nav>
+
+            <div class="welcome-strip">
+                {% if session.logged_in %}
+                    <span class="user-welcome">Welcome, {{ session.email }}!</span>
+                {% endif %}
+            </div>
+
+            <div class="nav-auth">
+                {% if session.logged_in %}
+                    <a class="btn btn-outline" href="{{ url_for('user.logout') }}">Logout</a>
+                {% else %}
+                    <a class="btn btn-outline" href="{{ url_for('user.login', next=request.url) }}">Login</a>
+                    <a class="btn btn-primary" href="{{ url_for('user.register') }}">Register</a>
+                {% endif %}
+            </div>
+
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Auction Page -->
+        <div id="auction" class="page-content active">
+            <div class="page-header">
+                <h2>Auction House</h2>
+                <p>Bid on rare and collectible tech items</p>
+            </div>
+
+            <div class="filters">
+                <h3>Filter Auctions</h3>
+                <div class="filter-group">
+                    <label for="auction-category">Category</label>
+                    <select id="auction-category">
+                        <option value="">All Categories</option>
+                        <option value="vintage">Vintage Tech</option>
+                        <option value="limited">Limited Editions</option>
+                        <option value="collectible">Collectibles</option>
+                        <option value="prototype">Prototypes</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="auction-status">Auction Status</label>
+                    <select id="auction-status">
+                        <option value="active">Active Auctions</option>
+                        <option value="ending">Ending Soon</option>
+                        <option value="new">New Listings</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary">Apply Filters</button>
+            </div>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <div class="auction-items-grid">
+                {% if active_auctions %}
+                    {% for auction in active_auctions %}
+                    {% set placeholder = 'https://via.placeholder.com/300x200/6C757D/FFFFFF?text=' ~ (auction.Title | replace(' ', '+')) %}
+                    <div class="auction-item">
+                        <div class="auction-image">
+                            <img src="{{ auction.Photo if auction.Photo else placeholder }}" 
+                                 alt="{{ auction.Title }}" 
+                                 onerror="this.src='{{ placeholder }}'; this.onerror=null;">
+                        </div>
+                        <div class="auction-timer">
+                            <i class="fas fa-clock"></i> {{ auction.TimeLeft }}
+                        </div>
+                        <div class="product-info">
+                            <h3>{{ auction.Title }}</h3>
+                            <p>{{ auction.Description[:100] }}...</p>
+                            <div class="product-price">Current bid: R{{ "%.2f"|format(auction.CurrentBid) }}</div>
+                            <div class="product-price">Starting bid: R{{ "%.2f"|format(auction.StartingBid) }}</div>
+                            {% if auction.HighestBidder %}
+                                <div class="highest-bidder">Highest bidder: {{ auction.HighestBidder }}</div>
+                            {% endif %}
+                            
+                            {% if session.user_id %}
+                                {% set base = auction.CurrentBid if auction.CurrentBid and auction.CurrentBid > 0 else auction.StartingBid %}
+                                <form method="POST" class="bid-form" action="{{ url_for('auction_bid') }}">
+                                    <input type="hidden" name="auction_id" value="{{ auction.AuctionId }}">
+                                    <div class="form-group">
+                                        <label for="bid-amount-{{ auction.AuctionId }}">Your Bid (R)</label>
+                                        <input type="number" 
+                                               id="bid-amount-{{ auction.AuctionId }}" 
+                                               name="bid_amount"
+                                               min="{{ base + 100 }}" 
+                                               value="{{ base + 100 }}"
+                                               step="100"
+                                               required>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Place Bid</button>
+                                </form>
+                            {% else %}
+                                <a href="{{ url_for('user.login', next=request.url) }}" class="btn btn-primary">
+                                    Login to Bid
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-auctions">
+                        <p>No active auctions at the moment. Check back soon!</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="services">
+                <div class="section-title">
+                    <h2>Auction Tips</h2>
+                </div>
+                <div class="services-grid">
+                    <div class="service-card">
+                        <div class="service-icon"><i class="fas fa-binoculars"></i></div>
+                        <h3>Do Your Research</h3>
+                        <p>Research recent sale prices for similar items before bidding.</p>
+                    </div>
+                    <div class="service-card">
+                        <div class="service-icon"><i class="fas fa-hourglass-half"></i></div>
+                        <h3>Timing is Everything</h3>
+                        <p>Place your bids in the final moments for the best chance to win.</p>
+                    </div>
+                    <div class="service-card">
+                        <div class="service-icon"><i class="fas fa-coins"></i></div>
+                        <h3>Set a Budget</h3>
+                        <p>Determine your maximum bid in Rands beforehand and stick to it.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer Section -->
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-column">
+                    <h3>ThriftTech</h3>
+                    <p>Your one-stop marketplace for buying, selling, renting, and repairing tech gadgets.</p>
+                </div>
+             
+                <div class="footer-column">
+                    <h3>Help & Support</h3>
+                    <ul>
+                        <li><a href="#">FAQ</a></li>
+                        <li><a href="#">Shipping & Returns</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Contact Us</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Connect With Us</h3>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2025 ThriftTech. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

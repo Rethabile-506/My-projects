@@ -1,0 +1,37 @@
+{% extends 'home.html' %}
+{% block content %}
+<div class="container">
+    <h1>Your Invoices</h1>
+    {% if invoices %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Invoice</th>
+                    <th>Date</th>
+                    <th>Total</th>
+                    <th>Order #</th>
+                    <th>View</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for inv in invoices %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>#{{ inv.InvoiceId }}</td>
+                    <td>{{ inv.CreatedAt.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>R{{ '%.2f'|format(inv.Total) }}</td>
+                    <td>{{ inv.OrderId }}</td>
+                    <td><a href="{{ url_for('user.invoice_detail', invoice_id=inv.InvoiceId) }}" class="btn btn-outline btn-sm">View</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>You have no invoices yet.</p>
+    {% endif %}
+    <div style="margin-top:16px">
+        <a href="{{ url_for('user.account') }}" class="btn btn-sm"><i class="fas fa-user-circle"></i> My Account</a>
+    </div>
+</div>
+{% endblock %}
