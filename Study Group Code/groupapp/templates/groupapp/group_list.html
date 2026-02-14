@@ -1,0 +1,40 @@
+{% extends 'groupapp/base.html' %} {% block content %}
+<section class="container-fluid text-center">
+
+    {% for group in groups%}
+
+    <div class="container">
+        <div class="card">
+            <a href="{% url 'group_detail' group.id  %}">
+                <div class="card-header">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h4>{{ group.name }}</h4>
+                        </div>
+
+                        <div class="col-md-3">
+                            <img src="{{group.group_profile.url}}" style="height: 100px; width: 100px"
+                                alt="group-image" />
+                        </div>
+                    </div>
+                    <div class="col-md-3"><a href="{% url 'join' group.id %}" class="btn btn-success">Join</a></div>
+                </div>
+            </a>
+            <div class="card-body">
+
+                Category: {%for cat in group.category.all%}
+                <a href="{% url 'cat_list' cat.id %}"><b>{{cat}},</b></a>
+                {%endfor%}
+
+            </div>
+        </div>
+
+
+
+    </div>
+    </div>
+    <br /><br />
+    {%endfor%}
+</section>
+
+{% endblock content %}

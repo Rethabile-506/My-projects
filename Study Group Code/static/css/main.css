@@ -1,0 +1,222 @@
+@import url("https://fonts.googleapis.com/css?family=Acme|Lobster|Patua+One|Rubik|Sniglet|Quicksand|Barlow");
+
+html {
+    scroll-behavior: smooth;
+
+}
+
+
+main {
+    font-family: Barlow, Quicksand, Rubik, sans-serif, serif, 'Times New Roman', Times, serif !important;
+}
+
+footer {
+    font-family: Rubik, sans-serif, serif, 'Times New Roman', Times, serif;
+}
+
+.example::-webkit-scrollbar {
+    display: none;
+}
+
+.navbar {
+    background-color: rgb(71, 194, 243) !important;
+}
+
+.card {
+    box-shadow: 15px 15px 10px rgb(78, 77, 77);
+
+}
+
+.card-header:hover {
+    background: rgb(11, 22, 83) !important;
+    color: whitesmoke !important;
+    transition: 0.1s ease-in;
+}
+
+.card a {
+    text-decoration: none;
+}
+
+.card-header {
+    color: black !important;
+    background: rgb(152, 214, 230) !important;
+    transition: 0.3s ease-in;
+
+}
+
+.nav-link:hover {
+    background: black !important;
+    color: white !important;
+    transition: 0.7s ease;
+}
+
+.icon-bar {
+    color: black;
+}
+
+
+
+/* .card {
+    width: 80%;
+    text-emphasis: none;
+    text-decoration: none;
+    border: 3px black solid;
+    box-shadow: 4px;
+    border-radius: 10px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 40px;
+    margin-top: 40px;
+    background-color: #e0ebf3;
+} */
+
+.card h4 {
+    margin: 40px 40px 0 40px;
+    text-align: left;
+}
+
+.card h6 {
+    margin: 25px 40px 0 40px;
+    text-align: left;
+}
+
+.card p {
+    text-align: right;
+    margin-right: 50px;
+    line-height: 10px;
+}
+
+
+.button {
+    display: inline-block;
+    font-family: "Montserrat", "Trebuchet MS", Helvetica, sans-serif;
+
+    padding: .8em 1.4em;
+    padding-right: 4.7em;
+    background: #009ED8;
+    border: none;
+    color: white;
+}
+
+html,
+body {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+
+
+
+
+.card-header {
+    background-color: rgb(133, 204, 231);
+}
+
+
+
+.myimage {
+    opacity: 1;
+    display: block;
+    transition: .5s ease;
+    backface-visibility: hidden;
+}
+
+.myimage:hover {
+    opacity: 0.9;
+    transform: scale(1.02);
+
+}
+
+
+.btn:hover {
+    background: black;
+    color: white;
+    border: 0.5px solid white;
+}
+
+.fa:hover {
+    color: red;
+
+}
+
+.fa {
+    color: white;
+}
+
+.profa {
+    color: black;
+}
+
+
+footer .container-fluid {
+    padding: 10vmin 10vmin;
+}
+
+footer .column a+a {
+    padding: 0 0.7em;
+}
+
+
+
+.content-section {
+    background: #ffffff;
+    padding: 10px 20px;
+    border: 1px solid #dddddd;
+    border-radius: 3px;
+    margin-bottom: 20px;
+}
+
+.account-img {
+    height: 125px !important;
+    width: 125px !important;
+    margin-right: 20px;
+    margin-bottom: 16px;
+}
+
+.account-heading {
+    font-size: 2.5rem;
+}
+
+
+.sidebar {
+    width: 20%;
+    position: fixed;
+    z-index: 1;
+    top: 20%;
+    left: 10px;
+    background: #eee;
+    overflow-x: hidden;
+    padding: 8px 0;
+}
+
+.sidebar ul li a {
+    padding: 6px 8px 6px 16px;
+    text-decoration: none;
+    font-size: 1em;
+    color: #2196F3;
+    display: block;
+}
+
+.sidebar ul li a:hover {
+    color: #064579;
+}
+
+.main {
+    margin-left: 15%;
+}
+
+.fa-paper-plane {
+    color: red !important;
+
+}
+
+.fa-paper-plane:hover {
+    color: red !important;
+}
+
+.fixed-bottom {
+    width: 60%;
+    left: 25%;
+    background: black !important;
+}

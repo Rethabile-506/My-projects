@@ -1,0 +1,119 @@
+{% extends 'groupapp/base.html'%}
+{% load crispy_forms_tags%}
+{% block content %}
+
+<section id="group-detail">
+
+
+    <div class="container">
+        <div class="sidebar">
+            <h4>Groups</h4>
+            <ul>
+                {% for user_group in user_groups %}
+                <li>
+                    <a href="{% url 'group_detail' user_group.id %}">{{user_group}}</a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="main content-section">
+
+            <div class="row">
+                <div class="col-md-2">
+                    <img class="img-fluid" src={{group.group_profile.url}} />
+                </div>
+                <div class="col-md-8">
+                    <h2>{{group.name}}</h2>
+                    <button class="btn btn-info" onclick="myFunction()">Create Post</button>
+                </div>
+                <div class="col-md-2"><a href="{% url 'leave' group.id %}" class="btn btn-danger">Leave</a></div>
+
+            </div>
+            <br>
+            <div id="formtag" style="display:none">
+                <form method="POST" action="{% url 'add_post' group.id %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {{ post_form|crispy }}
+                    <div class="form-group">
+                        <button href="" class="btn btn-outline-info" type="submit">
+                            Submit
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <br><br>
+            {% for post in posts %}
+            <div class="card">
+                <a href="{% url 'profile_detail' post.profile.id %}">
+                    <div class="card-header m-0 p-0">
+                        <div class="row">
+                            <div class="col-md-1 ml-0 mt-3 p-0">
+                                <img src={{post.profile.user_profile.url}} alt="" class="rounded-circle" height="40"
+                                    width="40">
+                            </div>
+                            <div class="col-md-9 p-0 m-0">
+                                <h4>{{post.profile.user.username}}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+                <div class="card-body" style="background-color: rgb(230, 230, 230);">
+                    <b>
+                        <h5 class="text-center">{{post.title}}</h5>
+                    </b>
+                    <div class="row">
+                        <div class="col-md-5">
+                            {% if post.description %}
+                            {{post.description}}
+                            {%endif%}
+                            {% if post.user_file %}
+                            <a class="btn btn-info" href={{post.user_file.url}}
+                                target="_blank">{{post.user_file|cut:'documents/'}}</a>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-7">
+                            {% if post.picture %}
+                            <img src={{post.picture.url}} alt="" style="height:300px; width:300px">
+                            {% endif %}
+                        </div>
+                    </div>
+
+
+                </div>
+            </div> <br><br>
+            {% endfor %}
+            <div class="content-section fixed-bottom mb-0 pb-0">
+                <form method="POST" action="{% url 'add_post' group.id%}">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-11">
+                            {{ comment_form|crispy }}
+                        </div>
+                        <div class="col-md-1">
+                            <div class="form-group">
+                                <button href="" class="btn btn-outline-info" type="submit">
+                                    <i class="fa fa-paper-plane" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+
+        </div>
+    </div>
+</section>
+<script>
+    function myFunction() {
+        var x = document.getElementById("formtag");
+        if (x.style.display === "block") {
+            x.style.display = "none";
+        } else {
+            x.style.display = "block";
+        }
+    }
+</script>
+
+
+{% endblock content %}
