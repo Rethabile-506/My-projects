@@ -1,5 +1,0 @@
-django
-gnewsclient
-beautifulsoup4
-python-Levenshtein
-requests
